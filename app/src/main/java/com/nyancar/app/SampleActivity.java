@@ -9,8 +9,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -42,6 +45,14 @@ public class SampleActivity extends Activity implements ICommNotify{
 	private final int TIMER_INTERVAL = 100;
 	private final int ENGINE_REVOLUTION_SPEED_ID = 0x0C;
 	private ByteBuffer _buf = null;
+
+    private MediaPlayer mediaPlayer;
+    public TextView songName, duration;
+    private double timeElapsed = 0, finalTime = 0;
+    private int forwardTime = 2000, backwardTime = 2000;
+    private Handler durationHandler = new Handler();
+
+    AudioManager audioManager;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,7 +71,35 @@ public class SampleActivity extends Activity implements ICommNotify{
         _btnConnect.setOnClickListener(_onClickListener);
         _btnDisconnect.setOnClickListener(_onClickListener);
         _btnSelectDevice.setOnClickListener(_onClickListener);
+
+
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+
+
+        initializeViews();
     }
+
+
+
+
+    public void initializeViews() {
+        try {
+            mediaPlayer = MediaPlayer.create(this, R.raw.nyancat);
+            mediaPlayer.setLooping(true);
+        } catch (Exception e) {
+            System.out.println("Exception starting player: " + e);
+        }
+    }
+
+    // play mp3 song
+    public void play() {
+        mediaPlayer.start();
+    }
+
+
+
+
+
 
 	@Override
 	public void onDestroy() {
@@ -177,6 +216,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		else if (nState == Communication.STATE_CONNECTED){
 			/* connected */
 			strState = "CONNECTED";
+            play();
 		}
 		else if (nState == Communication.STATE_CONNECT_FAILED){
 			/* connect failed */
@@ -224,6 +264,16 @@ public class SampleActivity extends Activity implements ICommNotify{
 				_tvDataLabel.setText(strData);
 			}
 		});
+        int vol, maxVol;
+        double x, max = 9000.0, pct, dec;
+
+        maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        x = Double.parseDouble(strData);
+        dec = x/max;
+        pct = dec * maxVol;
+        vol = (int)pct;
+        //System.out.println("VOLUME: " + vol + " PCT: " + pct + " x: " + x + " dec: " + dec);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
 	}
 	
 	/* Create the message of vehicle signal request */
