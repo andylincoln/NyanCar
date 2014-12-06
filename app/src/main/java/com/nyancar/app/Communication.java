@@ -2,7 +2,7 @@
 /* Copyright (c) 2014 TOYOTA MOTOR CORPORATION. All rights reserved. */
 /*********************************************************************/
 
-package com.example.sample;
+package com.nyancar.app;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-package com.example.sample.util;
+package com.nyancar.app.util;
 
 import java.nio.ByteBuffer;
 
