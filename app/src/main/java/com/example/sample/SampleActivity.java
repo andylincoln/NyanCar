@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -42,11 +43,14 @@ public class SampleActivity extends Activity implements ICommNotify{
 	private final int TIMER_INTERVAL = 100;
 	private final int ENGINE_REVOLUTION_SPEED_ID = 0x0C;
 	private ByteBuffer _buf = null;
-	
+    GaugeView gaugeView;
+    SurfaceView surfaceView;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        gaugeView = new GaugeView(this);
 
         /* Create the Communication class */
         _comm = new Communication();
@@ -60,6 +64,10 @@ public class SampleActivity extends Activity implements ICommNotify{
         _btnConnect.setOnClickListener(_onClickListener);
         _btnDisconnect.setOnClickListener(_onClickListener);
         _btnSelectDevice.setOnClickListener(_onClickListener);
+
+        surfaceView = (SurfaceView)findViewById(R.id.surfaceView1);
+        surfaceView = gaugeView;
+
     }
 
 	@Override
@@ -144,18 +152,24 @@ public class SampleActivity extends Activity implements ICommNotify{
 				long value   = toUint32Value(tmps, index + 2); 
 				int signalID = (tmpData & 0x0fff);
 				int stat 	 = ((tmpData >> 12) & 0x0f);
-				if (ENGINE_REVOLUTION_SPEED_ID == signalID){
-					/* Engine Revolution Speed = 14bit */
-					value = value & 0x00003FFF;
+                switch (signalID) {
+                    case ENGINE_REVOLUTION_SPEED_ID:
+                    /* Engine Revolution Speed = 14bit */
+                        value = value & 0x00003FFF;
 					/* Resolution of Engine Revolution Speed = "1" */
-					value = value * 1;
-					strData = String.valueOf(value);
-				}
-				Log.d(_tag,String.format("SIGNALID = %d, SIGNALSTAT = %d, VALUE = %d", signalID,stat,value));
-				index += 6;
-			}
-			if (strData.length() > 0){
-				updateContetnts(strData);
+                        value = value * 1;
+                        strData = String.valueOf(value);
+                        Log.d(_tag,String.format("SIGNALID = %d, SIGNALSTAT = %d, VALUE = %d", signalID,stat,value));
+                        index += 6;
+
+                        if (strData.length() > 0){
+                            updateContents(strData);
+                        }
+                        break;
+                    default:
+                        System.out.println("SIGNAL NOT RECOGNIZED: " + signalID);
+                }
+
 			}
 		}else{
 			Log.d(_tag,"UNKNOWN FRAME");
@@ -217,11 +231,12 @@ public class SampleActivity extends Activity implements ICommNotify{
 		}
 	}	
 	
-	private void updateContetnts(final String strData){
+	private void updateContents(final String strData){
 		_handler.post(new Runnable(){
 			@Override
 			public void run() {
-				_tvDataLabel.setText(strData);
+				/*_tvDataLabel.setText(strData);*/
+                gaugeView.getThread().setY(Integer.parseInt(strData));
 			}
 		});
 	}

@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">Sample</string>
     <string name="label_signalName">Engine Revolution Speed</string>
     <string name="button_connect">Connect</string>
     <string name="button_disconnect">Disconnect</string>
     <string name="button_selectDevice">Select Device</string>
     <string name="title_pairedDevices">Paired Devices</string>
+    <string name="title_activity_gauge">GaugeActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
 </resources>
