@@ -4,9 +4,6 @@
 
 package com.nyancar.app;
 
-import java.nio.ByteBuffer;
-import java.util.Timer;
-import java.util.TimerTask;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -15,15 +12,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class SampleActivity extends Activity implements ICommNotify{
-	private static final int REQUEST_BTDEVICE_SELECT = 1;
-	private Button _btnConnect;
+import com.nyancar.app.util.Utility;
+import com.nyancar.app.util.Utility.*;
+
+import java.nio.ByteBuffer;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class MainActivity extends Activity implements ICommNotify {
+
+    private static final int REQUEST_BTDEVICE_SELECT = 1;
+    private Button _btnConnect;
 	private Button _btnDisconnect;
 	private Button _btnSelectDevice;
 	private TextView _tvDataLabel;
@@ -37,16 +45,52 @@ public class SampleActivity extends Activity implements ICommNotify{
 	/* variable of the CAN-Gateway ECU Address */
 	private String _strDevAddress = "";
 
-	private final String _tag = "SampleActivity";
+	private final String _tag = "MainActivity";
 	/* interval for sending vehicle signal request (milliseconds) */
 	private final int TIMER_INTERVAL = 100;
 	private final int ENGINE_REVOLUTION_SPEED_ID = 0x0C;
 	private ByteBuffer _buf = null;
-	
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.button_connect:
+                if (_comm.isCommunication()){
+                    return true;
+                }
+				/* Open the session */
+                if (!_comm.openSession(_strDevAddress)){
+                    showAlertDialog("OpenSession Failed");
+                };
+                break;
+
+            case R.id.button_disconnect:
+                stopTimer();
+				/* Close the session */
+                _comm.closeSession();
+                break;
+
+            case R.id.button_select:
+                Intent intent = new Intent(MainActivity.this,DeviceListActivity.class);
+                startActivityForResult(intent, REQUEST_BTDEVICE_SELECT);
+                break;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.activity_main);
 
         /* Create the Communication class */
         _comm = new Communication();
@@ -54,12 +98,6 @@ public class SampleActivity extends Activity implements ICommNotify{
         _comm.setICommNotify(this);
 
         _tvDataLabel = (TextView)findViewById(R.id.textView_signal);
-        _btnConnect = (Button)findViewById(R.id.button_connect);
-        _btnDisconnect = (Button)findViewById(R.id.button_disconnect);
-        _btnSelectDevice = (Button)findViewById(R.id.button_select);
-        _btnConnect.setOnClickListener(_onClickListener);
-        _btnDisconnect.setOnClickListener(_onClickListener);
-        _btnSelectDevice.setOnClickListener(_onClickListener);
     }
 
 	@Override
@@ -76,30 +114,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		_comm.closeSession();
 
 		super.finish();
-	}	
-    
-	OnClickListener _onClickListener = new OnClickListener(){
-		@Override
-		public void onClick(View v) {
-			Button btn = (Button)v;
-			if (btn == _btnConnect){
-				if (_comm.isCommunication()){
-					return;
-				}
-				/* Open the session */
-				if (!_comm.openSession(_strDevAddress)){
-					showAlertDialog("OpenSession Failed");
-				};
-			}else if(btn == _btnDisconnect){	
-				stopTimer();
-				/* Close the session */
-				_comm.closeSession();
-			}else if(btn == _btnSelectDevice){	
-				Intent intent = new Intent(SampleActivity.this,DeviceListActivity.class);
-				startActivityForResult(intent, REQUEST_BTDEVICE_SELECT);
-			}
-		}
-	};
+	}
 
 	@Override
 	public void notifyReceiveData(Object data) {
@@ -132,7 +147,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		byte tmps[] = rcvData.array();
 		int len = rcvData.limit();
 		/* Analyze the message */
-		if (isCarInfoGetFrame(rcvData) == true && len >= 8){
+		if (Utility.isCarInfoGetFrame(rcvData) == true && len >= 8){
 			/* message of vehicle signal request */
 			String strData = "";
 			/* Number of signals */
@@ -144,7 +159,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 				long value   = toUint32Value(tmps, index + 2); 
 				int signalID = (tmpData & 0x0fff);
 				int stat 	 = ((tmpData >> 12) & 0x0f);
-				if (ENGINE_REVOLUTION_SPEED_ID == signalID){
+				if (signalID == ENGINE_REVOLUTION_SPEED_ID){
 					/* Engine Revolution Speed = 14bit */
 					value = value & 0x00003FFF;
 					/* Resolution of Engine Revolution Speed = "1" */
@@ -155,7 +170,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 				index += 6;
 			}
 			if (strData.length() > 0){
-				updateContetnts(strData);
+				updateContents(strData);
 			}
 		}else{
 			Log.d(_tag,"UNKNOWN FRAME");
@@ -201,7 +216,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		}
 	}
 
-	Handler _handler = new Handler(){
+	Handler _handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			/* Send the message of vehicle signal request */
@@ -217,7 +232,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		}
 	}	
 	
-	private void updateContetnts(final String strData){
+	private void updateContents(final String strData){
 		_handler.post(new Runnable(){
 			@Override
 			public void run() {
@@ -226,31 +241,13 @@ public class SampleActivity extends Activity implements ICommNotify{
 		});
 	}
 	
-	/* Create the message of vehicle signal request */
-	private ByteBuffer createCarInfoGetFrame(){
-		/* e.g.) request of Engine Revolution Speed */
-		byte[] buf = {0x7e,0x00,0x00,0x01,0x01,0x00,0x00,0x00,0x00,0x7f};
-		int length = buf.length;
-		/* Set the message length */
-		buf[1] = (byte)(((length - 6) >> 8) & 0xff);
-		buf[2] = (byte)((length - 6) & 0xff);
-		/* Set the request signal ID */
-		buf[6] = (byte)(ENGINE_REVOLUTION_SPEED_ID);
-		/* Calculate and set the CRC */
-		int crc = calcCRC(buf, 1, buf.length - 4);
-		/* Convert endian from little to big */
-		buf[length - 3] = (byte)((crc >> 8) & 0xff);
-		buf[length - 2] = (byte)(crc & 0xff);
-		return ByteBuffer.wrap(buf);
-	}
-	
 	private void startTimer(int timerCount){
 		stopTimer();
 		_timer = new Timer(false);
 		_timerTask = new TimerTask() {
 			public void run(){
 				/* Send the message of vehicle signal request */
-				_comm.writeData(createCarInfoGetFrame());
+				_comm.writeData(Utility.createRequest(Utility.STATUS_ENGINE_REVOLUTION_SPEED));
 			}
 		};
 		_timer.schedule(_timerTask,0,timerCount);
@@ -333,40 +330,13 @@ public class SampleActivity extends Activity implements ICommNotify{
 			return false;
 		}
 		int crc = this.toUint16Value(tmps, len - 3);
-		int calcCrc = this.calcCRC(tmps, 1, len - 4);
+		int calcCrc = Utility.calcCRC(tmps, 1, len - 4);
 		if (crc != calcCrc){
 			Log.d(_tag,"CRC ERROR");
 			return false;
 		}
 		return true;
 	}
-		
-	private boolean isCarInfoGetFrame(ByteBuffer frame){
-		byte tmp = frame.get(3);
-		if (tmp == 0x11){
-			return true;
-		}
-		return false;
-	}
-	
-    private int calcCRC(byte[] buffer, int index, int length) {
-		int crcValue = 0x0000;
-	    boolean flag;
-	    boolean c15;
-	    for( int i = 0; i < length; i++ ) {
-	        for(int j = 0; j < 8; j++){
-	            flag = ( (buffer[i + index] >> (7 - j) ) & 0x0001)==1;
-	            c15  = ((crcValue >> 15 & 1) == 1);
-	            crcValue <<= 1;
-	            if(c15 ^ flag){
-	                crcValue ^= 0x1021;
-	            }
-	        }
-	    }
-	    crcValue ^= 0x0000;
-	    crcValue &= 0x0000ffff;
-	    return crcValue;
-    } 	
 		
     private int toUint16Value(byte[] buffer, int index) {
     	int value = 0;
@@ -388,7 +358,7 @@ public class SampleActivity extends Activity implements ICommNotify{
 		_handler.post(new Runnable(){
 			@Override
 			public void run() {
-				Toast toast = Toast.makeText(SampleActivity.this, strToast, Toast.LENGTH_SHORT);
+				Toast toast = Toast.makeText(MainActivity.this, strToast, Toast.LENGTH_SHORT);
 				toast.show();
 			}
 		});
