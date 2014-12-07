@@ -28,3 +28,17 @@ proguard/
 #IDEA Files
 
 .idea/*
+
+app/src/main/res/layout/activity_main copy.xml
+
+app/src/main/java/com/nyancar/app/MainActivity copy.java
+
+app/src/main/res/raw/android_er.gif
+
+*.iml
+
+*.iml
+
+OnRamp.iml
+
+OnRamp.iml
