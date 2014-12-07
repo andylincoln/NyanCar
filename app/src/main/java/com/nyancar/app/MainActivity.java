@@ -9,6 +9,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -54,6 +55,21 @@ public class MainActivity extends Activity implements ICommNotify {
 	private final int ENGINE_REVOLUTION_SPEED_ID = 0x0C;
 	private ByteBuffer _buf = null;
 
+    private SharedPreferences mSharedPreferences;
+    SharedPreferences.OnSharedPreferenceChangeListener listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+            if (key.equals(getString(R.string.pref_high_score))) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        _tvDataLabel.setText(String.format("%d",sharedPreferences.getLong(key, 0)));
+                    }
+                });
+            }
+        }
+    };
+
 
     private MediaPlayer mediaPlayer;
     private Handler durationHandler = new Handler();
@@ -65,6 +81,8 @@ public class MainActivity extends Activity implements ICommNotify {
         inflater.inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -99,6 +117,7 @@ public class MainActivity extends Activity implements ICommNotify {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mSharedPreferences = getSharedPreferences("com.nyancar.app", MODE_PRIVATE);
 
         /* Create the Communication class */
         _comm = new Communication();
@@ -106,7 +125,7 @@ public class MainActivity extends Activity implements ICommNotify {
         _comm.setICommNotify(this);
 
         _tvDataLabel = (TextView)findViewById(R.id.textView_signal);
-
+        _tvDataLabel.setText(String.format("%d", mSharedPreferences.getLong(getString(R.string.pref_high_score), 0)));
 
         audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         initializeViews();
@@ -141,11 +160,23 @@ public class MainActivity extends Activity implements ICommNotify {
         mediaPlayer.start();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSharedPreferences.registerOnSharedPreferenceChangeListener(listener);
+    }
 
-	@Override
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mSharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
+    }
+
+    @Override
 	public void notifyReceiveData(Object data) {
 		Log.d(_tag,String.format("RECEIVE"));
-		ByteBuffer rcvData = (ByteBuffer)data;
+
+        ByteBuffer rcvData = (ByteBuffer)data;
 
 		/* Combine received messages */
 		if(isCombineFrame(rcvData) == true){
@@ -274,7 +305,15 @@ public class MainActivity extends Activity implements ICommNotify {
                 vol = (int)pct;
                 //System.out.println("VOLUME: " + vol + " PCT: " + pct + " x: " + x + " dec: " + dec);
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
-				_tvDataLabel.setText(strData);
+
+                long highScore = mSharedPreferences.getLong(getString(R.string.pref_high_score), 0);
+                Log.v(_tag, String.format("High score: %d", highScore));
+                long value = Long.parseLong(strData);
+                if (value > highScore) {
+                    mSharedPreferences.edit().putLong(getString(R.string.pref_high_score), value).commit();
+                    Log.v(_tag, String.format("High score: %d", value));
+                    _tvDataLabel.setText(strData);
+                }
 			}
 		});
 

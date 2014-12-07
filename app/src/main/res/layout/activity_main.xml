@@ -9,7 +9,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:gravity="center"
-    android:text="@string/label_signalName"
+    android:text="@string/label_highScore"
     android:textSize="26sp" />
 
 <TextView android:textAppearance="?android:attr/textAppearanceLarge" android:layout_width="fill_parent" android:gravity="center" android:id="@+id/textView_signal" android:text="-" android:layout_height="wrap_content" android:textSize="80sp"></TextView>
