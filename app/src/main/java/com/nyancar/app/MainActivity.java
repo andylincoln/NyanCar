@@ -61,6 +61,7 @@ public class MainActivity extends Activity implements ICommNotify {
 
     File file;
     private ImageView imageview;
+    private ImageView imagecover;
     private GifAnimationDrawable big;
 
 
@@ -145,7 +146,8 @@ public class MainActivity extends Activity implements ICommNotify {
             Log.e("DRAWABLE BAD>?", e.toString());
         }
 
-        imageview = (ImageView)findViewById(R.id.imageview);
+        imageview = (ImageView)findViewById(R.id.imageView);
+        imagecover = (ImageView)findViewById(R.id.imageCover);
 
         // and add the GifAnimationDrawable
         try{
@@ -161,7 +163,6 @@ public class MainActivity extends Activity implements ICommNotify {
             Log.e("DRAWABLE BAD?>?", e.toString());
 
         }
-
 
 
         initializeViews();
@@ -288,16 +289,37 @@ public class MainActivity extends Activity implements ICommNotify {
 			/* connected */
 			strState = "CONNECTED";
             play();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    imagecover.setVisibility(View.INVISIBLE);
+                }
+            });
 		}
 		else if (nState == Communication.STATE_CONNECT_FAILED){
 			/* connect failed */
 			strState = "CONNECT_FAILED";
-		}
+            mediaPlayer.pause();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    imagecover.setVisibility(View.VISIBLE);
+                }
+            });		}
 		else if (nState == Communication.STATE_DISCONNECTED){
 			/* disconnected */
 			_buf = null;
 			strState = "DISCONNECTED";
-		}
+            mediaPlayer.pause();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    imagecover.setVisibility(View.VISIBLE);
+                }
+            });
+        }
 		else{
 			/* unknown */
 			strState = "UNKNOWN";

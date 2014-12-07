@@ -1,24 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:orientation="vertical"
     android:weightSum="1">
 
-<TextView
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:text="@string/label_highScore"
-    android:textSize="26sp" />
+    <TextView
+        android:id="@+id/highscore"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/label_highScore"
+        android:textSize="26sp" />
 
-<TextView android:textAppearance="?android:attr/textAppearanceLarge" android:layout_width="fill_parent" android:gravity="center" android:id="@+id/textView_signal" android:text="-" android:layout_height="wrap_content" android:textSize="80sp"></TextView>
+    <TextView
+        android:id="@+id/textView_signal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="-"
+        android:layout_below="@+id/highscore"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="80sp" />
 
 
     <ImageView
+        android:id="@+id/imageView"
         android:layout_width="400px"
         android:layout_height="400px"
-        android:id="@+id/imageview"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:layout_gravity="center_horizontal" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/imageCover"
+        android:layout_width="400px"
+        android:layout_height="400px"
+        android:layout_alignBottom="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/nyancat" />
+
+</RelativeLayout>
