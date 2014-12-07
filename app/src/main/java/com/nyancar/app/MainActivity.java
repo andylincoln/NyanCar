@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.AnimationDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -22,12 +23,14 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.nyancar.app.util.Utility;
 import com.nyancar.app.util.Utility.*;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -54,6 +57,12 @@ public class MainActivity extends Activity implements ICommNotify {
 	private final int TIMER_INTERVAL = 100;
 	private final int ENGINE_REVOLUTION_SPEED_ID = 0x0C;
 	private ByteBuffer _buf = null;
+
+
+    File file;
+    private ImageView imageview;
+    private GifAnimationDrawable big;
+
 
     private SharedPreferences mSharedPreferences;
     SharedPreferences.OnSharedPreferenceChangeListener listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -128,7 +137,36 @@ public class MainActivity extends Activity implements ICommNotify {
         _tvDataLabel.setText(String.format("%d", mSharedPreferences.getLong(getString(R.string.pref_high_score), 0)));
 
         audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        file = new File("res/raw/nyangif.gif");
+
+        try {
+            AnimationDrawable drawable = new GifAnimationDrawable(file);
+        } catch (Exception e){
+            Log.e("DRAWABLE BAD>?", e.toString());
+        }
+
+        imageview = (ImageView)findViewById(R.id.imageview);
+
+        // and add the GifAnimationDrawable
+        try{
+            android.util.Log.v("GifAnimationDrawable", "===>One");
+            android.util.Log.v("GifAnimationDrawable", "===>Two");
+            android.util.Log.v("GifAnimationDrawable", "===>Three");
+            big = new GifAnimationDrawable(getResources().openRawResource(R.raw.nyangif));
+            //big.setOneShot(true);
+            android.util.Log.v("GifAnimationDrawable", "===>Four");
+            imageview.setImageDrawable(big);
+
+        }catch(Exception e){
+            Log.e("DRAWABLE BAD?>?", e.toString());
+
+        }
+
+
+
         initializeViews();
+
+
     }
 
 	@Override

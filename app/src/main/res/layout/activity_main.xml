@@ -13,4 +13,12 @@
     android:textSize="26sp" />
 
 <TextView android:textAppearance="?android:attr/textAppearanceLarge" android:layout_width="fill_parent" android:gravity="center" android:id="@+id/textView_signal" android:text="-" android:layout_height="wrap_content" android:textSize="80sp"></TextView>
+
+
+    <ImageView
+        android:layout_width="400px"
+        android:layout_height="400px"
+        android:id="@+id/imageview"
+        android:layout_gravity="center_horizontal" />
+
 </LinearLayout>
